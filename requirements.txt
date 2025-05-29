@@ -1,0 +1,10 @@
+flask
+flask-bootstrap
+flask-wtf
+flask-sqlalchemy
+flask-login
+flask-migrate
+flask-mail
+itsdangerous
+numpy
+pandas
