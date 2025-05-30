@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Language Detector</title>
+</head>
+<body>
+    <h1>Language Detector</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.text.label }}<br>
+        {{ form.text(rows=5, cols=50) }}<br><br>
+        {{ form.submit() }}
+    </form>
+
+    {% if prediction %}
+        <h3>{{ prediction }}</h3>
+    {% endif %}
+</body>
+</html>
