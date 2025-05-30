@@ -1,6 +1,8 @@
 from flask import Flask
 from app.models import db
 from app.auth import login_manager
+from app.main.routes import main_bp
+app.register_blueprint(main_bp)
 
 def create_app():
     app = Flask(__name__)
