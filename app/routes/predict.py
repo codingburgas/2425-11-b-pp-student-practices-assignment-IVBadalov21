@@ -1,23 +1,33 @@
-from flask import Blueprint, render_template, request, flash
-from ..forms.forms import PredictForm
+from flask import Blueprint, render_template, flash, redirect, url_for, request
+from flask_login import login_required, current_user
+from ..models import db, Prediction  # Remove Survey from here
+from ..forms.forms import PredictionForm
 import joblib
+import os
 
-predict_bp = Blueprint("predict", __name__)
+predict_bp = Blueprint('predict', __name__)
 
-model = joblib.load("language_model.pkl")
-fe = joblib.load("feature_extractor.pkl")
-le = joblib.load("label_encoder.pkl")
 
-@predict_bp.route("/predict", methods=["GET", "POST"])
+@predict_bp.route('/predict', methods=['GET', 'POST'])
+@login_required
 def predict():
-    form = PredictForm()
-    prediction = None
-
+    form = PredictionForm()
     if form.validate_on_submit():
-        text = form.text.data
-        X = fe.transform([text])
-        pred_class = model.predict(X[0])
-        prediction = le.inverse_transform([pred_class])[0]
-        flash(f"Detected language: {prediction}", "success")
+        prediction = Prediction(
+            text=form.text.data,
+            is_public=form.make_public.data,
+            user_id=current_user.id
+        )
 
-    return render_template("predict.html", form=form, prediction=prediction)
+        # Here you would add your language detection logic
+        # For now, let's just set a dummy value
+        prediction.predicted_language = "English"
+        prediction.confidence = 0.95
+
+        db.session.add(prediction)
+        db.session.commit()
+
+        flash(f'Text language detected as {prediction.predicted_language}!', 'success')
+        return redirect(url_for('predict.predict'))
+
+    return render_template('predict/predict.html', form=form)

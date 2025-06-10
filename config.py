@@ -1,9 +1,12 @@
+import os
+from dotenv import load_dotenv
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
+
 class Config:
-    SECRET_KEY = 'your-secret-key'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///db.sqlite3'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = 'your-email@gmail.com'
-    MAIL_PASSWORD = 'your-password'
+    LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'pt', 'nl', 'pl', 'ru', 'ja', 'zh']
