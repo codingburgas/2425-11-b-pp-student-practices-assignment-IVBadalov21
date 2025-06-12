@@ -10,7 +10,7 @@
                 <div class="card-body">
                     <h2 class="card-title">Hello, {{ current_user.username }}!</h2>
                     <p class="card-text">Ready to detect some languages?</p>
-                    <a href="{{ url_for('predict.predict') }}" class="btn btn-primary btn-lg">
+                    <a href="{{ url_for('predict.language_predict') }}" class="btn btn-primary btn-lg">
                         Start Detecting Languages
                     </a>
                 </div>

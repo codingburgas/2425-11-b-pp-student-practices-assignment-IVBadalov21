@@ -18,5 +18,6 @@ class FeatureExtractor:
         result = []
         for text in texts:
             vec = [text.lower().count(c) for c in self.chars]
-            result.append(np.array(vec) / max(1, sum(vec)))
+            total = max(1, sum(vec))
+            result.append(np.array(vec) / total)
         return np.array(result)
