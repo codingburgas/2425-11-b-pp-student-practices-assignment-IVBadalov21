@@ -8,8 +8,8 @@ to ensure correct functionality for language detection.
 import unittest
 import numpy as np
 from tests import BaseTestCase
-from perceptron import MultiClassPerceptron
-from language_features import LanguageFeatureExtractor
+from app.core.perceptron import MultiClassPerceptron
+from app.core.language_features import LanguageFeatureExtractor
 
 
 class TestLanguageFeatureExtractor(BaseTestCase):

@@ -99,6 +99,7 @@ def reset_model():
 def get_language_statistics() -> Dict[str, Any]:
     """Get statistics about languages in the system"""
     from app.models import Survey, Prediction
+    from app.extensions import db
     
     # Survey statistics
     survey_stats = db.session.query(Survey.language, db.func.count(Survey.id))\

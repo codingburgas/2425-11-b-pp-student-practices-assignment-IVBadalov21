@@ -3,6 +3,9 @@ import os
 class Config:
     """Base configuration class"""
     
+    # Security configuration
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'language-detector-secret-key-2025')
+    
     # Database configuration
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///language_detector.db')
     SQLALCHEMY_ENGINE_OPTIONS = {

@@ -1,5 +1,6 @@
+
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectField, FloatField, BooleanField, PasswordField, SubmitField
+from wtforms import StringField, TextAreaField, SelectField, BooleanField, SubmitField, FloatField, PasswordField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, ValidationError
 from app.models import User
 
@@ -56,10 +57,10 @@ class SurveyForm(FlaskForm):
 class PredictionForm(FlaskForm):
     """Form for language prediction"""
     input_text = TextAreaField('Text to Analyze', 
-                              validators=[DataRequired(), Length(min=5, max=5000)],
-                              render_kw={'placeholder': 'Enter text to detect its language...',
-                                       'rows': 4})
-    make_public = BooleanField('Make this prediction public (share with others)')
+                              validators=[DataRequired(), Length(min=1, max=5000)],
+                              render_kw={'placeholder': 'Enter text for language detection...',
+                                       'rows': 6})
+    make_public = BooleanField('Make this prediction public', default=False)
     submit = SubmitField('Detect Language')
 
 class EditProfileForm(FlaskForm):
@@ -75,7 +76,7 @@ class EditProfileForm(FlaskForm):
     
     def validate_email(self, email):
         if email.data != self.original_email:
-            user = User.query.filter_by(email=self.email.data).first()
+            user = User.query.filter_by(email=email.data).first()
             if user is not None:
                 raise ValidationError('Please use a different email address.')
 

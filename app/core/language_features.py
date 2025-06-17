@@ -260,3 +260,118 @@ class LanguageFeatureExtractor:
             'unicode_support': True,
             'cyrillic_support': True
         }
+import re
+import numpy as np
+from typing import List, Dict, Any
+import unicodedata
+
+class LanguageFeatureExtractor:
+    """
+    Feature extractor for language detection
+    Extracts linguistic features from text samples
+    """
+    
+    def __init__(self):
+        """Initialize the feature extractor"""
+        self.feature_names = [
+            'avg_word_length', 'vowel_ratio', 'consonant_ratio',
+            'cyrillic_ratio', 'latin_ratio', 'space_ratio',
+            'punctuation_ratio', 'digit_ratio', 'uppercase_ratio',
+            'sentence_count', 'word_count', 'char_frequency_en',
+            'char_frequency_es', 'char_frequency_fr', 'char_frequency_bg',
+            'char_frequency_de', 'trigram_features'
+        ]
+        
+        # Language-specific character patterns
+        self.language_chars = {
+            'en': set('abcdefghijklmnopqrstuvwxyz'),
+            'es': set('abcdefghijklmnopqrstuvwxyzñáéíóúü'),
+            'fr': set('abcdefghijklmnopqrstuvwxyzàâäçéèêëïîôöùûüÿ'),
+            'bg': set('абвгдежзийклмнопрстуфхцчшщъьюя'),
+            'de': set('abcdefghijklmnopqrstuvwxyzäöüß')
+        }
+    
+    def extract_features(self, text: str) -> np.ndarray:
+        """
+        Extract features from text
+        
+        Args:
+            text: Input text to analyze
+            
+        Returns:
+            Feature vector as numpy array
+        """
+        if not text:
+            return np.zeros(len(self.feature_names))
+        
+        text = text.lower()
+        features = []
+        
+        # Basic text statistics
+        words = text.split()
+        word_count = len(words)
+        char_count = len(text)
+        
+        # Average word length
+        avg_word_length = sum(len(word) for word in words) / max(word_count, 1)
+        features.append(avg_word_length)
+        
+        # Character type ratios
+        vowels = 'aeiouаеиоуыэюя'
+        vowel_count = sum(1 for char in text if char in vowels)
+        features.append(vowel_count / max(char_count, 1))  # vowel_ratio
+        
+        consonants = 'bcdfghjklmnpqrstvwxyzбвгджзклмнпрстфхцчшщ'
+        consonant_count = sum(1 for char in text if char in consonants)
+        features.append(consonant_count / max(char_count, 1))  # consonant_ratio
+        
+        # Script ratios
+        cyrillic_count = sum(1 for char in text if '\u0400' <= char <= '\u04FF')
+        features.append(cyrillic_count / max(char_count, 1))  # cyrillic_ratio
+        
+        latin_count = sum(1 for char in text if 'a' <= char <= 'z' or 'A' <= char <= 'Z')
+        features.append(latin_count / max(char_count, 1))  # latin_ratio
+        
+        # Other ratios
+        space_count = text.count(' ')
+        features.append(space_count / max(char_count, 1))  # space_ratio
+        
+        punct_count = sum(1 for char in text if char in '.,!?;:()[]{}"-')
+        features.append(punct_count / max(char_count, 1))  # punctuation_ratio
+        
+        digit_count = sum(1 for char in text if char.isdigit())
+        features.append(digit_count / max(char_count, 1))  # digit_ratio
+        
+        upper_count = sum(1 for char in text if char.isupper())
+        features.append(upper_count / max(char_count, 1))  # uppercase_ratio
+        
+        # Sentence and word counts (normalized)
+        sentence_count = len(re.split(r'[.!?]+', text))
+        features.append(sentence_count / max(char_count, 1))  # sentence_count
+        features.append(word_count / max(char_count, 1))  # word_count
+        
+        # Language-specific character frequencies
+        for lang in ['en', 'es', 'fr', 'bg', 'de']:
+            lang_chars = self.language_chars[lang]
+            lang_char_count = sum(1 for char in text if char in lang_chars)
+            features.append(lang_char_count / max(char_count, 1))
+        
+        # Simple trigram features (average)
+        trigrams = [text[i:i+3] for i in range(len(text)-2)]
+        trigram_score = len(set(trigrams)) / max(len(trigrams), 1)
+        features.append(trigram_score)
+        
+        return np.array(features, dtype=np.float32)
+    
+    def get_feature_names(self) -> List[str]:
+        """Get list of feature names"""
+        return self.feature_names.copy()
+    
+    def get_info(self) -> Dict[str, Any]:
+        """Get information about the feature extractor"""
+        return {
+            'feature_count': len(self.feature_names),
+            'supported_languages': list(self.language_chars.keys()),
+            'unicode_support': True,
+            'cyrillic_support': True
+        }
