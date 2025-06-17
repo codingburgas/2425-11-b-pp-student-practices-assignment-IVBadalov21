@@ -2,6 +2,8 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
+from itsdangerous import URLSafeTimedSerializer as Serializer
+from flask import current_app
 
 # Import db from extensions to avoid circular imports
 from app.extensions import db
@@ -42,6 +44,19 @@ class User(UserMixin, db.Model):
     
     def __repr__(self):
         return f'<User {self.username}>'
+
+    def get_confirmation_token(self, expires_sec=3600):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id})
+
+    @staticmethod
+    def verify_confirmation_token(token, expires_sec=3600):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token, max_age=expires_sec)['user_id']
+        except Exception:
+            return None
+        return User.query.get(user_id)
 
 class Survey(db.Model):
     """Model for storing survey data for training"""

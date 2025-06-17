@@ -17,6 +17,7 @@ def index():
     return render_template('index.html', title='Language Detector')
 
 @bp.route('/predict', methods=['GET', 'POST'])
+@login_required
 def predict():
     """Language prediction interface"""
     form = PredictionForm()
@@ -174,8 +175,9 @@ def edit_profile():
 
 @bp.route('/prediction_feedback', methods=['POST'])
 def prediction_feedback():
-    # Placeholder for handling prediction feedback
-    return "Prediction feedback submitted!"
+    # Handle feedback logic here (if any)
+    flash("Thank you for your feedback!", "success")
+    return redirect(url_for('main.results'))
 
 @bp.route('/feedback/<int:prediction_id>', methods=['POST'])
 def feedback(prediction_id):
