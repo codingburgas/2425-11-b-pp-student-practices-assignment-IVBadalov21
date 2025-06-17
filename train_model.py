@@ -64,7 +64,22 @@ def create_training_data():
             "Das Wetter ist heute wunderschön.",
             "Ich liebe Programmierung und künstliche Intelligenz.",
             "Das Internet hat die Kommunikation revolutioniert.",
-            "Datenwissenschaft ist ein spannendes Feld."
+            "Datenwissenschaft ist ein spannendes Feld.",
+            "Guten Morgen! Wie war dein Wochenende?",
+            "Könnten Sie mir bitte helfen?",
+            "Ich spreche nur ein wenig Deutsch.",
+            "Straßenbahnfahren macht Spaß.",
+            "Möchten Sie einen Kaffee trinken?",
+            "Das ist überhaupt kein Problem.",
+            "Übermorgen wird das Wetter besser.",
+            "Fußball ist in Deutschland sehr beliebt.",
+            "Ich habe meine Schlüssel verloren.",
+            "Entschuldigung, wo ist die nächste Apotheke?",
+            "Die Prüfung war ziemlich schwierig.",
+            "Können Sie das bitte wiederholen?",
+            "Ich verstehe das nicht.",
+            "Herzlichen Glückwunsch zum Geburtstag!",
+            "Das ist eine ausgezeichnete Idee."
         ]
     }
     return training_data
