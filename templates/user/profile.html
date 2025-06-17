@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <!-- User Info Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user-circle me-2"></i>Profile Information
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-circle fa-5x text-primary"></i>
+                </div>
+                <h4>{{ current_user.get_full_name() }}</h4>
+                <p class="text-muted">@{{ current_user.username }}</p>
+                <p class="text-muted">{{ current_user.email }}</p>
+                
+                {% if current_user.is_admin %}
+                <span class="badge bg-danger mb-2">Administrator</span>
+                {% endif %}
+                
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('main.edit_profile') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Account Stats -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Account Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-2">
+                        <h4 class="text-primary">{{ user_stats.surveys_contributed }}</h4>
+                        <small class="text-muted">Surveys</small>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <h4 class="text-success">{{ user_stats.predictions_made }}</h4>
+                        <small class="text-muted">Predictions</small>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <h5 class="text-info">{{ user_stats.public_predictions }}</h5>
+                    <small class="text-muted">Public Predictions</small>
+                </div>
+                
+                <hr>
+                
+                <div class="small text-muted">
+                    <p class="mb-1">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Member since: {{ user_stats.member_since.strftime('%B %d, %Y') }}
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Last seen: {{ user_stats.last_seen.strftime('%B %d, %Y at %H:%M') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- Language Contribution Chart -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-language me-2"></i>Language Contributions
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if language_stats %}
+                <div class="row">
+                    {% for lang, count in language_stats.items() %}
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">
+                                {% if lang == 'en' %}🇺🇸 English
+                                {% elif lang == 'es' %}🇪🇸 Spanish
+                                {% elif lang == 'fr' %}🇫🇷 French
+                                {% elif lang == 'bg' %}🇧🇬 Bulgarian
+                                {% elif lang == 'de' %}🇩🇪 German
+                                {% else %}{{ lang|upper }}
+                                {% endif %}
+                            </span>
+                            <span class="badge bg-primary">{{ count }}</span>
+                        </div>
+                        <div class="progress mt-1" style="height: 8px;">
+                            {% set max_count = language_stats.values() | max %}
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ (count / max_count * 100)|round }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-clipboard fa-3x mb-3"></i>
+                    <h6>No contributions yet</h6>
+                    <p>Start contributing to our language detection model by completing surveys!</p>
+                    <a href="{{ url_for('main.survey') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Complete Survey
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('main.predict') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-search me-2"></i>Make Prediction
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('main.survey') }}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-clipboard me-2"></i>Submit Survey
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('main.results') }}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-chart-bar me-2"></i>View Results
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <a href="{{ url_for('main.model_info') }}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-info-circle me-2"></i>Model Info
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Achievement Badges -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-trophy me-2"></i>Achievements
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if user_stats.surveys_contributed >= 1 %}
+                    <div class="col-auto mb-2">
+                        <span class="badge bg-success p-2">
+                            <i class="fas fa-seedling me-1"></i>First Contribution
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user_stats.surveys_contributed >= 10 %}
+                    <div class="col-auto mb-2">
+                        <span class="badge bg-primary p-2">
+                            <i class="fas fa-star me-1"></i>Data Contributor
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user_stats.predictions_made >= 1 %}
+                    <div class="col-auto mb-2">
+                        <span class="badge bg-info p-2">
+                            <i class="fas fa-search me-1"></i>First Prediction
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user_stats.predictions_made >= 25 %}
+                    <div class="col-auto mb-2">
+                        <span class="badge bg-warning p-2">
+                            <i class="fas fa-brain me-1"></i>ML Explorer
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if user_stats.public_predictions >= 5 %}
+                    <div class="col-auto mb-2">
+                        <span class="badge bg-purple p-2">
+                            <i class="fas fa-share me-1"></i>Community Sharer
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if not (user_stats.surveys_contributed >= 1 or user_stats.predictions_made >= 1) %}
+                    <div class="col-12 text-center text-muted">
+                        <i class="fas fa-medal fa-2x mb-2"></i>
+                        <p>Complete your first survey or prediction to earn achievements!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-clipboard me-2"></i>Language Survey
+                </h4>
+                <p class="text-muted mb-0">Help improve our language detection model by contributing text samples</p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.survey') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.language.label(class="form-label") }}
+                        {{ form.language(class="form-select" + (" is-invalid" if form.language.errors else "")) }}
+                        {% if form.language.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.language.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Select the language of the text you will provide
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.text_sample.label(class="form-label") }}
+                        {{ form.text_sample(class="form-control" + (" is-invalid" if form.text_sample.errors else "")) }}
+                        {% if form.text_sample.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.text_sample.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-keyboard me-1"></i>
+                            Enter authentic text in your selected language (minimum 10 characters, supports Unicode/Cyrillic)
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.confidence.label(class="form-label") }}
+                        <div class="input-group">
+                            {{ form.confidence(class="form-control" + (" is-invalid" if form.confidence.errors else ""), step="0.1", min="0", max="1") }}
+                            <span class="input-group-text">confidence</span>
+                        </div>
+                        {% if form.confidence.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.confidence.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-chart-line me-1"></i>
+                            How confident are you in the language identification? (1.0 = completely sure, 0.5 = somewhat sure)
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Language Examples -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Language Examples
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="languageExamples">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#english">
+                                🇺🇸 English Examples
+                            </button>
+                        </h2>
+                        <div id="english" class="accordion-collapse collapse" data-bs-parent="#languageExamples">
+                            <div class="accordion-body">
+                                <p><strong>Formal:</strong> "The implementation of artificial intelligence in modern technology has revolutionized various industries."</p>
+                                <p><strong>Casual:</strong> "I'm really excited about the new movie coming out next week. It looks amazing!"</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#spanish">
+                                🇪🇸 Spanish Examples
+                            </button>
+                        </h2>
+                        <div id="spanish" class="accordion-collapse collapse" data-bs-parent="#languageExamples">
+                            <div class="accordion-body">
+                                <p><strong>Formal:</strong> "La implementación de inteligencia artificial en la tecnología moderna ha revolucionado varias industrias."</p>
+                                <p><strong>Casual:</strong> "Estoy muy emocionado por la nueva película que sale la próxima semana. ¡Se ve increíble!"</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#french">
+                                🇫🇷 French Examples
+                            </button>
+                        </h2>
+                        <div id="french" class="accordion-collapse collapse" data-bs-parent="#languageExamples">
+                            <div class="accordion-body">
+                                <p><strong>Formal:</strong> "L'implémentation de l'intelligence artificielle dans la technologie moderne a révolutionné diverses industries."</p>
+                                <p><strong>Casual:</strong> "Je suis vraiment excité par le nouveau film qui sort la semaine prochaine. Il a l'air fantastique !"</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#german">
+                                🇩🇪 German Examples
+                            </button>
+                        </h2>
+                        <div id="german" class="accordion-collapse collapse" data-bs-parent="#languageExamples">
+                            <div class="accordion-body">
+                                <p><strong>Formal:</strong> "Die Implementierung künstlicher Intelligenz in der modernen Technologie hat verschiedene Industrien revolutioniert."</p>
+                                <p><strong>Casual:</strong> "Ich bin wirklich aufgeregt wegen des neuen Films, der nächste Woche herauskommt. Er sieht fantastisch aus!"</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bulgarian">
+                                🇧🇬 Bulgarian Examples
+                            </button>
+                        </h2>
+                        <div id="bulgarian" class="accordion-collapse collapse" data-bs-parent="#languageExamples">
+                            <div class="accordion-body">
+                                <p><strong>Formal:</strong> "Внедряването на изкуствен интелект в модерните технологии революционизира различни индустрии."</p>
+                                <p><strong>Casual:</strong> "Наистина съм развълнуван за новия филм, който излiza следващата седмица. Изглежда невероятно!"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Contribution Guidelines -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-question-circle me-2"></i>Contribution Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Use authentic, natural text
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Minimum 10 characters
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Unicode/Cyrillic supported
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Vary text complexity
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-times text-danger me-2"></i>
+                        No machine translations
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-times text-danger me-2"></i>
+                        No offensive content
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Your Contributions -->
+        {% if user_surveys %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Your Recent Contributions
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for survey in user_surveys %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <div class="fw-bold">
+                                    {% if survey.language == 'en' %}🇺🇸 English
+                                    {% elif survey.language == 'es' %}🇪🇸 Spanish
+                                    {% elif survey.language == 'fr' %}🇫🇷 French
+                                    {% elif survey.language == 'bg' %}🇧🇬 Bulgarian
+                                    {% elif survey.language == 'de' %}🇩🇪 German
+                                    {% endif %}
+                                </div>
+                                <p class="mb-1 text-muted small">{{ survey.text_sample[:50] }}{% if survey.text_sample|length > 50 %}...{% endif %}</p>
+                                <small class="text-muted">{{ survey.created_at.strftime('%m/%d %H:%M') }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% if survey.is_approved %}
+                                <span class="badge bg-success">Approved</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                                <br>
+                                <small class="text-muted">{{ (survey.confidence * 100)|round }}%</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Progress Tracker -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-trophy me-2"></i>Progress Tracker
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="small">Contributions</span>
+                        <span class="small">{{ user_surveys|length }}/10</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ (user_surveys|length / 10 * 100)|round }}%"></div>
+                    </div>
+                </div>
+                
+                {% if user_surveys|length >= 10 %}
+                <div class="text-center">
+                    <span class="badge bg-success p-2">
+                        <i class="fas fa-star me-1"></i>Data Contributor
+                    </span>
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">
+                    Contribute {{ 10 - user_surveys|length }} more samples to earn the Data Contributor badge!
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

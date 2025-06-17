@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        {% if public_view %}Public Results{% else %}My Prediction Results{% endif %}
+                    </h4>
+                    {% if not public_view %}
+                    <a href="{{ url_for('main.predict') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>New Prediction
+                    </a>
+                    {% endif %}
+                </div>
+                {% if public_view %}
+                <p class="text-muted mb-0">Community shared predictions and results</p>
+                {% else %}
+                <p class="text-muted mb-0">Your language detection history and results</p>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if predictions.items %}
+                <!-- Results Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Text Sample</th>
+                                <th>Detected Language</th>
+                                <th>Confidence</th>
+                                {% if not public_view %}
+                                <th>Feedback</th>
+                                {% endif %}
+                                <th>Date</th>
+                                {% if public_view %}
+                                <th>User</th>
+                                {% endif %}
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prediction in predictions.items %}
+                            <tr>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 200px;" title="{{ prediction.input_text }}">
+                                        {{ prediction.input_text }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        {% if prediction.predicted_language == 'en' %}🇺🇸 EN
+                                        {% elif prediction.predicted_language == 'es' %}🇪🇸 ES
+                                        {% elif prediction.predicted_language == 'fr' %}🇫🇷 FR
+                                        {% elif prediction.predicted_language == 'bg' %}🇧🇬 BG
+                                        {% elif prediction.predicted_language == 'de' %}🇩🇪 DE
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set confidence_scores = prediction.get_confidence_scores() %}
+                                    {% if confidence_scores %}
+                                    <span class="text-success fw-bold">
+                                        {{ "%.1f"|format(confidence_scores[prediction.predicted_language] * 100) }}%
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                {% if not public_view %}
+                                <td>
+                                    {% if prediction.actual_language %}
+                                        {% if prediction.actual_language == prediction.predicted_language %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Correct
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times me-1"></i>Wrong
+                                        </span>
+                                        {% endif %}
+                                    {% else %}
+                                    <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#feedbackModal{{ prediction.id }}">
+                                        <i class="fas fa-comment me-1"></i>Feedback
+                                    </button>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                                <td>
+                                    <small class="text-muted">
+                                        {{ prediction.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                </td>
+                                {% if public_view %}
+                                <td>
+                                    <small class="text-muted">
+                                        {{ prediction.user.get_full_name() }}
+                                    </small>
+                                </td>
+                                {% endif %}
+                                <td>
+                                    <button class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailModal{{ prediction.id }}">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if predictions.pages > 1 %}
+                <nav aria-label="Prediction results pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if predictions.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=predictions.prev_num) }}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in predictions.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != predictions.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for(request.endpoint, page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if predictions.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for(request.endpoint, page=predictions.next_num) }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+                {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Results Found</h5>
+                    {% if public_view %}
+                    <p class="text-muted">No public predictions have been shared yet.</p>
+                    <a href="{{ url_for('main.predict') }}" class="btn btn-primary">
+                        <i class="fas fa-share me-2"></i>Make a Public Prediction
+                    </a>
+                    {% else %}
+                    <p class="text-muted">You haven't made any predictions yet.</p>
+                    <a href="{{ url_for('main.predict') }}" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Make Your First Prediction
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modals -->
+{% for prediction in predictions.items %}
+<div class="modal fade" id="detailModal{{ prediction.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-search me-2"></i>Prediction Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Input Text</h6>
+                        <div class="p-3 bg-light rounded mb-3">
+                            {{ prediction.input_text }}
+                        </div>
+                        
+                        <h6>Detection Result</h6>
+                        <p class="mb-1">
+                            <strong>Language:</strong>
+                            <span class="badge bg-primary ms-1">
+                                {% if prediction.predicted_language == 'en' %}🇺🇸 English
+                                {% elif prediction.predicted_language == 'es' %}🇪🇸 Spanish
+                                {% elif prediction.predicted_language == 'fr' %}🇫🇷 French
+                                {% elif prediction.predicted_language == 'bg' %}🇧🇬 Bulgarian
+                                {% elif prediction.predicted_language == 'de' %}🇩🇪 German
+                                {% endif %}
+                            </span>
+                        </p>
+                        <p class="mb-1">
+                            <strong>Processing Time:</strong> {{ "%.3f"|format(prediction.processing_time) }}s
+                        </p>
+                        <p class="mb-3">
+                            <strong>Date:</strong> {{ prediction.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </p>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6>Confidence Scores</h6>
+                        {% set confidence_scores = prediction.get_confidence_scores() %}
+                        {% if confidence_scores %}
+                        {% for lang, score in confidence_scores.items() %}
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between">
+                                <span class="small">
+                                    {% if lang == 'en' %}🇺🇸 English
+                                    {% elif lang == 'es' %}🇪🇸 Spanish
+                                    {% elif lang == 'fr' %}🇫🇷 French
+                                    {% elif lang == 'bg' %}🇧🇬 Bulgarian
+                                    {% elif lang == 'de' %}🇩🇪 German
+                                    {% endif %}
+                                </span>
+                                <span class="small fw-bold">{{ "%.2f"|format(score * 100) }}%</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar {% if lang == prediction.predicted_language %}bg-success{% else %}bg-secondary{% endif %}" 
+                                     role="progressbar" style="width: {{ score * 100 }}%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p class="text-muted">No confidence scores available</p>
+                        {% endif %}
+                        
+                        {% if prediction.actual_language %}
+                        <h6 class="mt-3">User Feedback</h6>
+                        {% if prediction.actual_language == prediction.predicted_language %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-check me-1"></i>Confirmed Correct
+                        </span>
+                        {% else %}
+                        <div>
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times me-1"></i>Correction Provided
+                            </span>
+                            <p class="small mt-2 mb-0">
+                                Actual language: 
+                                <span class="badge bg-warning">
+                                    {% if prediction.actual_language == 'en' %}🇺🇸 English
+                                    {% elif prediction.actual_language == 'es' %}🇪🇸 Spanish
+                                    {% elif prediction.actual_language == 'fr' %}🇫🇷 French
+                                    {% elif prediction.actual_language == 'bg' %}🇧🇬 Bulgarian
+                                    {% elif prediction.actual_language == 'de' %}🇩🇪 German
+                                    {% endif %}
+                                </span>
+                            </p>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback Modals (for user's own predictions) -->
+{% if not public_view and not prediction.actual_language %}
+<div class="modal fade" id="feedbackModal{{ prediction.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-comment me-2"></i>Provide Feedback
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Was the detected language correct?</p>
+                <p class="text-muted small">
+                    Detected: <strong>
+                        {% if prediction.predicted_language == 'en' %}🇺🇸 English
+                        {% elif prediction.predicted_language == 'es' %}🇪🇸 Spanish
+                        {% elif prediction.predicted_language == 'fr' %}🇫🇷 French
+                        {% elif prediction.predicted_language == 'bg' %}🇧🇬 Bulgarian
+                        {% elif prediction.predicted_language == 'de' %}🇩🇪 German
+                        {% endif %}
+                    </strong>
+                </p>
+                
+                <div class="d-grid gap-2">
+                    <form method="POST" action="{{ url_for('main.prediction_feedback') }}">
+                        <input type="hidden" name="prediction_id" value="{{ prediction.id }}">
+                        <input type="hidden" name="actual_language" value="{{ prediction.predicted_language }}">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-thumbs-up me-2"></i>Yes, it's correct
+                        </button>
+                    </form>
+                </div>
+                
+                <hr>
+                
+                <p class="small mb-2">If incorrect, select the actual language:</p>
+                <div class="d-grid gap-1">
+                    {% for lang_code, lang_name in config.LANGUAGE_NAMES.items() %}
+                    {% if lang_code != prediction.predicted_language %}
+                    <form method="POST" action="{{ url_for('main.prediction_feedback') }}">
+                        <input type="hidden" name="prediction_id" value="{{ prediction.id }}">
+                        <input type="hidden" name="actual_language" value="{{ lang_code }}">
+                        <button type="submit" class="btn btn-outline-warning btn-sm w-100">
+                            {% if lang_code == 'en' %}🇺🇸 English
+                            {% elif lang_code == 'es' %}🇪🇸 Spanish
+                            {% elif lang_code == 'fr' %}🇫🇷 French
+                            {% elif lang_code == 'bg' %}🇧🇬 Bulgarian
+                            {% elif lang_code == 'de' %}🇩🇪 German
+                            {% endif %}
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}

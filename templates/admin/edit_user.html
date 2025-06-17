@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-user-edit me-2"></i>Edit User
+                    </h4>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Users
+                    </a>
+                </div>
+                <p class="text-muted mb-0">Editing user: <strong>{{ user.username }}</strong></p>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.first_name.label(class="form-label") }}
+                            {{ form.first_name(class="form-control" + (" is-invalid" if form.first_name.errors else "")) }}
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.first_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.last_name.label(class="form-label") }}
+                            {{ form.last_name(class="form-control" + (" is-invalid" if form.last_name.errors else "")) }}
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.last_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                        {% if form.username.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Username must be unique across the system
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Changing email may require re-confirmation
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ form.is_confirmed(class="form-check-input") }}
+                                {{ form.is_confirmed.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                User can access the system when confirmed
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ form.is_admin(class="form-check-input") }}
+                                {{ form.is_admin.label(class="form-check-label") }}
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-warning me-1 text-warning"></i>
+                                Admin users have full system access
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- User Statistics -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>User Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-primary">{{ user.surveys.count() }}</h4>
+                        <p class="text-muted mb-0">Surveys</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-success">{{ user.predictions.count() }}</h4>
+                        <p class="text-muted mb-0">Predictions</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-info">{{ user.predictions.filter_by(is_public=True).count() }}</h4>
+                        <p class="text-muted mb-0">Public</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-warning">
+                            {% set feedback_count = user.predictions.filter(user.predictions.c.accuracy_score.isnot(None)).count() %}
+                            {{ feedback_count }}
+                        </h4>
+                        <p class="text-muted mb-0">Feedback</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row text-muted small">
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <strong>Registered:</strong> {{ user.registered_on.strftime('%Y-%m-%d %H:%M') }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Last Seen:</strong> 
+                            {% if user.last_seen %}
+                                {{ user.last_seen.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <strong>Email Status:</strong>
+                            {% if user.is_confirmed %}
+                                <span class="text-success">Confirmed</span>
+                                {% if user.confirmed_on %}
+                                    ({{ user.confirmed_on.strftime('%Y-%m-%d') }})
+                                {% endif %}
+                            {% else %}
+                                <span class="text-warning">Pending</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Role:</strong>
+                            {% if user.is_admin %}
+                                <span class="text-danger">Administrator</span>
+                            {% else %}
+                                <span class="text-primary">Regular User</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

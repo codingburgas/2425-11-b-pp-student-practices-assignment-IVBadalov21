@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- Model Overview -->
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-brain me-2"></i>Language Detection Model
+                </h4>
+                <p class="text-muted mb-0">Custom Perceptron Algorithm Information</p>
+            </div>
+            <div class="card-body">
+                {% if model_summary.status == "Trained" %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Algorithm Details</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Type:</strong> Multi-class Perceptron</li>
+                            <li><strong>Approach:</strong> One-vs-All Classification</li>
+                            <li><strong>Languages:</strong> {{ model_summary.languages|length }}</li>
+                            <li><strong>Features:</strong> {{ model_summary.feature_dimension }}</li>
+                            <li><strong>Learning Rate:</strong> {{ model_summary.learning_rate }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Supported Languages</h6>
+                        <div class="row">
+                            {% for lang in model_summary.languages %}
+                            <div class="col-6 mb-1">
+                                <span class="badge bg-primary">
+                                    {% if lang == 'en' %}🇺🇸 EN
+                                    {% elif lang == 'es' %}🇪🇸 ES
+                                    {% elif lang == 'fr' %}🇫🇷 FR
+                                    {% elif lang == 'bg' %}🇧🇬 BG
+                                    {% elif lang == 'de' %}🇩🇪 DE
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Feature Extraction</h6>
+                        {% set feature_info = model_summary.feature_extractor_info %}
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-check text-success me-2"></i>Character n-grams ({{ feature_info.ngram_sizes|join(', ') }})</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Language-specific patterns</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Text statistics</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Unicode support</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Cyrillic script support</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Implementation</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-code text-info me-2"></i>Pure Python implementation</li>
+                            <li><i class="fas fa-cube text-info me-2"></i>NumPy for mathematical operations</li>
+                            <li><i class="fas fa-ban text-danger me-2"></i>No scikit-learn</li>
+                            <li><i class="fas fa-ban text-danger me-2"></i>No TensorFlow/PyTorch ML</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Custom feature engineering</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-robot fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Model Not Trained</h5>
+                    <p class="text-muted">The model needs training data before it can be used for predictions.</p>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('main.survey') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Contribute Training Data
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Training History -->
+        {% if training_history %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Training History
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Samples</th>
+                                <th>Accuracy</th>
+                                <th>Error Rate</th>
+                                <th>Loss</th>
+                                <th>Epochs</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for training in training_history %}
+                            <tr>
+                                <td>{{ training.training_date.strftime('%m/%d %H:%M') }}</td>
+                                <td>{{ training.samples_count }}</td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        {{ "%.1f"|format(training.accuracy * 100) }}%
+                                    </span>
+                                </td>
+                                <td>{{ "%.3f"|format(training.error_rate) }}</td>
+                                <td>{{ "%.3f"|format(training.loss) }}</td>
+                                <td>{{ training.epochs }}</td>
+                                <td>{{ "%.1f"|format(training.training_time) }}s</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Current Model Status -->
+        {% if latest_training %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-tachometer-alt me-2"></i>Current Performance
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <h3 class="text-success">{{ "%.1f"|format(latest_training.accuracy * 100) }}%</h3>
+                    <p class="text-muted mb-0">Overall Accuracy</p>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h5 class="text-info">{{ latest_training.samples_count }}</h5>
+                        <small class="text-muted">Training Samples</small>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="text-warning">{{ latest_training.epochs }}</h5>
+                        <small class="text-muted">Epochs</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="small text-muted">
+                    <p class="mb-1">
+                        <strong>Error Rate:</strong> {{ "%.3f"|format(latest_training.error_rate) }}
+                    </p>
+                    <p class="mb-1">
+                        <strong>Loss:</strong> {{ "%.3f"|format(latest_training.loss) }}
+                    </p>
+                    <p class="mb-1">
+                        <strong>Training Time:</strong> {{ "%.1f"|format(latest_training.training_time) }}s
+                    </p>
+                    <p class="mb-0">
+                        <strong>Last Trained:</strong> {{ latest_training.training_date.strftime('%Y-%m-%d %H:%M') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Dataset Statistics -->
+        {% if survey_stats %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-database me-2"></i>Training Dataset
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="small">Total Samples</span>
+                        <span class="small fw-bold">{{ survey_stats|sum(attribute=1) }}</span>
+                    </div>
+                </div>
+                
+                {% for lang, count in survey_stats %}
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between">
+                        <span class="small">
+                            {% if lang == 'en' %}🇺🇸 English
+                            {% elif lang == 'es' %}🇪🇸 Spanish
+                            {% elif lang == 'fr' %}🇫🇷 French
+                            {% elif lang == 'bg' %}🇧🇬 Bulgarian
+                            {% elif lang == 'de' %}🇩🇪 German
+                            {% endif %}
+                        </span>
+                        <span class="small fw-bold">{{ count }}</span>
+                    </div>
+                    <div class="progress" style="height: 4px;">
+                        {% set max_count = survey_stats|map(attribute=1)|max %}
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ (count / max_count * 100)|round }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Algorithm Explanation -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-question-circle me-2"></i>How It Works
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="small text-muted mb-2">PERCEPTRON ALGORITHM</h6>
+                    <p class="small mb-0">A linear classifier that learns to separate language classes using feature weights and bias terms.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="small text-muted mb-2">ONE-VS-ALL APPROACH</h6>
+                    <p class="small mb-0">Each language has its own binary classifier. The language with the highest confidence wins.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="small text-muted mb-2">FEATURE EXTRACTION</h6>
+                    <p class="small mb-0">Character patterns, language-specific markers, and statistical properties are used as features.</p>
+                </div>
+                
+                <div>
+                    <h6 class="small text-muted mb-2">LEARNING PROCESS</h6>
+                    <p class="small mb-0">Weights are updated iteratively based on prediction errors until convergence.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        {% if current_user.is_authenticated %}
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('main.predict') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-search me-2 text-primary"></i>Test the Model
+                    </a>
+                    <a href="{{ url_for('main.survey') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-plus me-2 text-success"></i>Add Training Data
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a href="{{ url_for('admin.model_metrics') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar me-2 text-info"></i>Detailed Metrics
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Hero Section -->
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <div class="text-center">
+                <h1 class="display-4">
+                    <i class="fas fa-language me-3"></i>Language Detector
+                </h1>
+                <p class="lead">Advanced multi-language detection using custom Perceptron algorithm</p>
+                <p class="mb-4">Detect languages in text samples with high accuracy using our machine learning model trained on multilingual data.</p>
+                
+                {% if current_user.is_authenticated %}
+                <a class="btn btn-light btn-lg me-3" href="{{ url_for('main.predict') }}">
+                    <i class="fas fa-search me-2"></i>Try Detection
+                </a>
+                <a class="btn btn-outline-light btn-lg" href="{{ url_for('main.survey') }}">
+                    <i class="fas fa-clipboard me-2"></i>Contribute Data
+                </a>
+                {% else %}
+                <a class="btn btn-light btn-lg me-3" href="{{ url_for('auth.register') }}">
+                    <i class="fas fa-user-plus me-2"></i>Get Started
+                </a>
+                <a class="btn btn-outline-light btn-lg" href="{{ url_for('auth.login') }}">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Supported Languages -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-globe me-2"></i>Supported Languages
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-flag me-3 text-primary"></i>
+                                <strong>English</strong>
+                                <small class="text-muted ms-auto">Latin script</small>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-flag me-3 text-danger"></i>
+                                <strong>Spanish</strong>
+                                <small class="text-muted ms-auto">Latin script</small>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-flag me-3 text-info"></i>
+                                <strong>French</strong>
+                                <small class="text-muted ms-auto">Latin script</small>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-flag me-3 text-success"></i>
+                                <strong>Bulgarian</strong>
+                                <small class="text-muted ms-auto">Cyrillic script</small>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-flag me-3 text-warning"></i>
+                                <strong>German</strong>
+                                <small class="text-muted ms-auto">Latin script</small>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>System Statistics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h4 class="text-primary">{{ stats.total_users }}</h4>
+                        <small class="text-muted">Users</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-success">{{ stats.total_surveys }}</h4>
+                        <small class="text-muted">Surveys</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-info">{{ stats.total_predictions }}</h4>
+                        <small class="text-muted">Predictions</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-warning">{{ stats.supported_languages }}</h4>
+                        <small class="text-muted">Languages</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Public Predictions -->
+{% if recent_predictions %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-globe me-2"></i>Recent Public Predictions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for prediction in recent_predictions %}
+                    <div class="col-12 mb-3">
+                        <div class="border-start border-primary ps-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <p class="mb-1">
+                                        <strong>{{ prediction.input_text[:100] }}{% if prediction.input_text|length > 100 %}...{% endif %}</strong>
+                                    </p>
+                                    <small class="text-muted">
+                                        Detected as <span class="badge bg-primary">{{ prediction.predicted_language|upper }}</span>
+                                        by {{ prediction.user.get_full_name() }}
+                                    </small>
+                                </div>
+                                <small class="text-muted">
+                                    {{ prediction.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center">
+                    <a href="{{ url_for('main.public_results') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-right me-2"></i>View All Public Results
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Features Section -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Custom Perceptron</h5>
+                <p class="card-text">Built from scratch using pure Python and NumPy, our Perceptron algorithm provides accurate language detection without external ML libraries.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-globe-americas fa-3x text-success mb-3"></i>
+                <h5 class="card-title">Multi-Script Support</h5>
+                <p class="card-text">Full Unicode support including Cyrillic script for Bulgarian, with sophisticated feature extraction for different writing systems.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x text-info mb-3"></i>
+                <h5 class="card-title">Community Driven</h5>
+                <p class="card-text">Contribute to improving the model by submitting text samples through our survey system. Help make language detection better for everyone.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

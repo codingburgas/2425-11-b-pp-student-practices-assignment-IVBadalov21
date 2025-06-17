@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your Email - Language Detector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 24px;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .btn {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🌐 Language Detector</div>
+            <h2>Confirm Your Email Address</h2>
+        </div>
+        
+        <p>Welcome to Language Detector!</p>
+        
+        <p>Thank you for registering with our multilingual text detection service. To complete your registration and start using our advanced Perceptron-based language detection system, please confirm your email address by clicking the button below:</p>
+        
+        <div style="text-align: center;">
+            <a href="{{ confirm_url }}" class="btn">Confirm Email Address</a>
+        </div>
+        
+        <p>If the button doesn't work, you can also copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: #007bff;">{{ confirm_url }}</p>
+        
+        <p><strong>What you can do after confirmation:</strong></p>
+        <ul>
+            <li>🔍 Detect languages in text samples with high accuracy</li>
+            <li>📊 Contribute training data through our survey system</li>
+            <li>📈 View your prediction history and results</li>
+            <li>🌍 Share your predictions with the community</li>
+            <li>🔬 Access detailed model performance metrics</li>
+        </ul>
+        
+        <p><strong>Supported Languages:</strong></p>
+        <p>English, Spanish, French, Bulgarian (Cyrillic), German</p>
+        
+        <div class="footer">
+            <p>This confirmation link will expire in 1 hour for security reasons.</p>
+            <p>If you didn't create an account with Language Detector, please ignore this email.</p>
+            <p>© 2024 Language Detector - Advanced ML-powered language detection</p>
+        </div>
+    </div>
+</body>
+</html>

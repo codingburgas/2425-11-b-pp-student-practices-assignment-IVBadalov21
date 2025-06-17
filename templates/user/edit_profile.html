@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>Edit Profile
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.edit_profile') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.first_name.label(class="form-label") }}
+                            {{ form.first_name(class="form-control" + (" is-invalid" if form.first_name.errors else "")) }}
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.first_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ form.last_name.label(class="form-label") }}
+                            {{ form.last_name(class="form-control" + (" is-invalid" if form.last_name.errors else "")) }}
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.last_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else "")) }}
+                        {% if form.email.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            If you change your email address, you may need to confirm it again.
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('main.profile') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Account Information -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Account Information
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-muted small">
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <strong>Username:</strong> {{ current_user.username }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Member Since:</strong> {{ current_user.registered_on.strftime('%B %d, %Y') }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <strong>Email Status:</strong> 
+                            {% if current_user.is_confirmed %}
+                                <span class="text-success">Confirmed</span>
+                            {% else %}
+                                <span class="text-warning">Pending</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Last Seen:</strong> {{ current_user.last_seen.strftime('%B %d, %Y at %H:%M') }}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if not current_user.is_confirmed %}
+                <hr>
+                <div class="text-center">
+                    <p class="text-warning mb-2">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Your email address is not confirmed.
+                    </p>
+                    <a href="{{ url_for('auth.resend_confirmation') }}" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-envelope me-2"></i>Resend Confirmation Email
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

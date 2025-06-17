@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-cog me-2"></i>Admin Dashboard
+            </h2>
+            <form method="POST" action="{{ url_for('admin.train_model') }}">
+                <button type="submit" class="btn btn-success" onclick="return confirm('Start model training? This may take a few minutes.')">
+                    <i class="fas fa-brain me-2"></i>Train Model
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                <h4 class="text-primary">{{ stats.total_users }}</h4>
+                <p class="text-muted mb-0">Total Users</p>
+                <small class="text-success">{{ stats.confirmed_users }} confirmed</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-clipboard fa-2x text-success mb-2"></i>
+                <h4 class="text-success">{{ stats.total_surveys }}</h4>
+                <p class="text-muted mb-0">Total Surveys</p>
+                <small class="text-info">{{ stats.approved_surveys }} approved</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-search fa-2x text-info mb-2"></i>
+                <h4 class="text-info">{{ stats.total_predictions }}</h4>
+                <p class="text-muted mb-0">Total Predictions</p>
+                <small class="text-warning">{{ stats.public_predictions }} public</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-user-shield fa-2x text-danger mb-2"></i>
+                <h4 class="text-danger">{{ stats.admin_users }}</h4>
+                <p class="text-muted mb-0">Administrators</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Language Distribution -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Language Distribution
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if language_distribution %}
+                {% for lang, count in language_distribution.items() %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            {% if lang == 'en' %}🇺🇸 English
+                            {% elif lang == 'es' %}🇪🇸 Spanish
+                            {% elif lang == 'fr' %}🇫🇷 French
+                            {% elif lang == 'bg' %}🇧🇬 Bulgarian
+                            {% elif lang == 'de' %}🇩🇪 German
+                            {% endif %}
+                        </span>
+                        <span class="badge bg-primary">{{ count }}</span>
+                    </div>
+                    <div class="progress mt-1" style="height: 8px;">
+                        {% set max_count = language_distribution.values() | max %}
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ (count / max_count * 100)|round }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-chart-pie fa-3x mb-3"></i>
+                    <p>No survey data available yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Model Training History -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-brain me-2"></i>Recent Training Sessions
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if training_history %}
+                <div class="list-group list-group-flush">
+                    {% for training in training_history %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">
+                                    Accuracy: <span class="text-success">{{ "%.1f"|format(training.accuracy * 100) }}%</span>
+                                </h6>
+                                <p class="mb-1 small text-muted">
+                                    {{ training.samples_count }} samples, {{ training.epochs }} epochs
+                                </p>
+                                <small class="text-muted">{{ training.training_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-info">{{ "%.1f"|format(training.training_time) }}s</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('admin.model_metrics') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-chart-line me-2"></i>View Detailed Metrics
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-brain fa-3x mb-3"></i>
+                    <p>No training sessions yet</p>
+                    <form method="POST" action="{{ url_for('admin.train_model') }}" class="d-inline">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-play me-2"></i>Start First Training
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Recent Users
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_users %}
+                <div class="list-group list-group-flush">
+                    {% for user in recent_users %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ user.get_full_name() }}</h6>
+                                <p class="mb-0 small text-muted">@{{ user.username }}</p>
+                            </div>
+                            <div class="text-end">
+                                {% if user.is_confirmed %}
+                                <span class="badge bg-success">Verified</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                                {% if user.is_admin %}
+                                <span class="badge bg-danger">Admin</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-users me-2"></i>Manage All Users
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <p>No users yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-clipboard me-2"></i>Recent Surveys
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_surveys %}
+                <div class="list-group list-group-flush">
+                    {% for survey in recent_surveys %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <h6 class="mb-1">
+                                    {% if survey.language == 'en' %}🇺🇸 English
+                                    {% elif survey.language == 'es' %}🇪🇸 Spanish
+                                    {% elif survey.language == 'fr' %}🇫🇷 French
+                                    {% elif survey.language == 'bg' %}🇧🇬 Bulgarian
+                                    {% elif survey.language == 'de' %}🇩🇪 German
+                                    {% endif %}
+                                </h6>
+                                <p class="mb-1 small text-muted">{{ survey.text_sample[:30] }}...</p>
+                                <small class="text-muted">by {{ survey.user.username }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% if survey.is_approved %}
+                                <span class="badge bg-success">Approved</span>
+                                {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('admin.surveys') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-clipboard me-2"></i>Manage All Surveys
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <p>No surveys yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-search me-2"></i>Recent Predictions
+                </h6>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_predictions %}
+                <div class="list-group list-group-flush">
+                    {% for prediction in recent_predictions %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="me-auto">
+                                <h6 class="mb-1">
+                                    <span class="badge bg-primary">
+                                        {% if prediction.predicted_language == 'en' %}🇺🇸 EN
+                                        {% elif prediction.predicted_language == 'es' %}🇪🇸 ES
+                                        {% elif prediction.predicted_language == 'fr' %}🇫🇷 FR
+                                        {% elif prediction.predicted_language == 'bg' %}🇧🇬 BG
+                                        {% elif prediction.predicted_language == 'de' %}🇩🇪 DE
+                                        {% endif %}
+                                    </span>
+                                </h6>
+                                <p class="mb-1 small text-muted">{{ prediction.input_text[:30] }}...</p>
+                                <small class="text-muted">by {{ prediction.user.username }}</small>
+                            </div>
+                            <div class="text-end">
+                                {% if prediction.is_public %}
+                                <span class="badge bg-info">Public</span>
+                                {% endif %}
+                                {% if prediction.actual_language %}
+                                    {% if prediction.actual_language == prediction.predicted_language %}
+                                    <span class="badge bg-success">✓</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">✗</span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('main.public_results') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-globe me-2"></i>View Public Results
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <p>No predictions yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fas fa-users me-2"></i>Manage Users
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.surveys') }}" class="btn btn-outline-success w-100 mb-2">
+                            <i class="fas fa-clipboard me-2"></i>Review Surveys
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('admin.model_metrics') }}" class="btn btn-outline-info w-100 mb-2">
+                            <i class="fas fa-chart-bar me-2"></i>Model Metrics
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <form method="POST" action="{{ url_for('admin.train_model') }}" class="w-100">
+                            <button type="submit" class="btn btn-outline-warning w-100 mb-2" onclick="return confirm('Start model training?')">
+                                <i class="fas fa-brain me-2"></i>Retrain Model
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

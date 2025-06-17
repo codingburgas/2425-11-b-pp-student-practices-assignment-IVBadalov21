@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-chart-line me-2"></i>Model Metrics & Analysis
+            </h2>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Model Summary -->
+{% if model_summary.status == "Trained" %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-brain me-2"></i>Model Architecture
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Algorithm Details</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Type:</strong> Multi-class Perceptron</li>
+                            <li><strong>Approach:</strong> One-vs-All Classification</li>
+                            <li><strong>Languages:</strong> {{ model_summary.languages|length }}</li>
+                            <li><strong>Features:</strong> {{ model_summary.feature_dimension }}</li>
+                            <li><strong>Learning Rate:</strong> {{ model_summary.learning_rate }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Feature Extraction</h6>
+                        {% set feature_info = model_summary.feature_extractor_info %}
+                        <ul class="list-unstyled">
+                            <li><strong>N-gram Sizes:</strong> {{ feature_info.ngram_sizes|join(', ') }}</li>
+                            <li><strong>Unicode Support:</strong> ✓ Enabled</li>
+                            <li><strong>Cyrillic Support:</strong> ✓ Enabled</li>
+                            <li><strong>Feature Count:</strong> {{ feature_info.feature_count }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-language me-2"></i>Supported Languages
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for lang in model_summary.languages %}
+                    <div class="col-6 mb-2">
+                        <span class="badge bg-primary w-100">
+                            {% if lang == 'en' %}🇺🇸 English
+                            {% elif lang == 'es' %}🇪🇸 Spanish
+                            {% elif lang == 'fr' %}🇫🇷 French
+                            {% elif lang == 'bg' %}🇧🇬 Bulgarian
+                            {% elif lang == 'de' %}🇩🇪 German
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Training History -->
+{% if training_history %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Training History
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Samples</th>
+                                <th>Accuracy</th>
+                                <th>Error Rate</th>
+                                <th>Loss</th>
+                                <th>Epochs</th>
+                                <th>Features</th>
+                                <th>Learning Rate</th>
+                                <th>Training Time</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for training in training_history %}
+                            <tr>
+                                <td>
+                                    <small>{{ training.training_date.strftime('%Y-%m-%d %H:%M') }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ training.samples_count }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        {{ "%.1f"|format(training.accuracy * 100) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning">
+                                        {{ "%.3f"|format(training.error_rate) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ "%.3f"|format(training.loss) }}
+                                    </span>
+                                </td>
+                                <td>{{ training.epochs }}</td>
+                                <td>{{ training.feature_count }}</td>
+                                <td>{{ training.learning_rate }}</td>
+                                <td>{{ "%.1f"|format(training.training_time) }}s</td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ training.notes[:50] if training.notes else '' }}
+                                        {% if training.notes and training.notes|length > 50 %}...{% endif %}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Feature Importance -->
+{% if feature_importance %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-weight-hanging me-2"></i>Feature Importance by Language
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="featureImportanceAccordion">
+                    {% for lang, features in feature_importance.items() %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#collapse{{ lang }}">
+                                {% if lang == 'en' %}🇺🇸 English
+                                {% elif lang == 'es' %}🇪🇸 Spanish
+                                {% elif lang == 'fr' %}🇫🇷 French
+                                {% elif lang == 'bg' %}🇧🇬 Bulgarian
+                                {% elif lang == 'de' %}🇩🇪 German
+                                {% endif %}
+                                - Top Features
+                            </button>
+                        </h2>
+                        <div id="collapse{{ lang }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" 
+                             data-bs-parent="#featureImportanceAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    {% for feature_name, importance in features.items()[:20] %}
+                                    <div class="col-md-6 mb-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="small text-muted">{{ feature_name }}</span>
+                                            <span class="small fw-bold">{{ "%.4f"|format(importance) }}</span>
+                                        </div>
+                                        <div class="progress" style="height: 4px;">
+                                            {% set max_importance = features.values() | list | first %}
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ (importance / max_importance * 100)|round }}%"></div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Performance Metrics -->
+{% if training_history %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-area me-2"></i>Accuracy Trend
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="accuracyChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Loss Trend
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="lossChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-stopwatch me-2"></i>Training Time Analysis
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="timeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-database me-2"></i>Dataset Size Impact
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="samplesChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- No Data State -->
+{% if not training_history %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No Training Data Available</h5>
+                <p class="text-muted">Train the model to see detailed metrics and analysis.</p>
+                <form method="POST" action="{{ url_for('admin.train_model') }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-brain me-2"></i>Start Training
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if training_history %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Prepare data for charts
+const trainingData = {
+    dates: [{% for training in training_history|reverse %}'{{ training.training_date.strftime("%m/%d %H:%M") }}'{% if not loop.last %},{% endif %}{% endfor %}],
+    accuracy: [{% for training in training_history|reverse %}{{ training.accuracy }}{% if not loop.last %},{% endif %}{% endfor %}],
+    loss: [{% for training in training_history|reverse %}{{ training.loss }}{% if not loop.last %},{% endif %}{% endfor %}],
+    time: [{% for training in training_history|reverse %}{{ training.training_time }}{% if not loop.last %},{% endif %}{% endfor %}],
+    samples: [{% for training in training_history|reverse %}{{ training.samples_count }}{% if not loop.last %},{% endif %}{% endfor %}]
+};
+
+// Chart configuration
+const chartConfig = {
+    type: 'line',
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+};
+
+// Accuracy Chart
+new Chart(document.getElementById('accuracyChart'), {
+    ...chartConfig,
+    data: {
+        labels: trainingData.dates,
+        datasets: [{
+            label: 'Accuracy',
+            data: trainingData.accuracy,
+            borderColor: 'rgb(25, 135, 84)',
+            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        ...chartConfig.options,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 1,
+                ticks: {
+                    callback: function(value) {
+                        return (value * 100).toFixed(0) + '%';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Loss Chart
+new Chart(document.getElementById('lossChart'), {
+    ...chartConfig,
+    data: {
+        labels: trainingData.dates,
+        datasets: [{
+            label: 'Loss',
+            data: trainingData.loss,
+            borderColor: 'rgb(220, 53, 69)',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            tension: 0.4
+        }]
+    }
+});
+
+// Training Time Chart
+new Chart(document.getElementById('timeChart'), {
+    ...chartConfig,
+    data: {
+        labels: trainingData.dates,
+        datasets: [{
+            label: 'Training Time (s)',
+            data: trainingData.time,
+            borderColor: 'rgb(255, 193, 7)',
+            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+            tension: 0.4
+        }]
+    }
+});
+
+// Dataset Size Chart
+new Chart(document.getElementById('samplesChart'), {
+    ...chartConfig,
+    data: {
+        labels: trainingData.dates,
+        datasets: [{
+            label: 'Samples',
+            data: trainingData.samples,
+            borderColor: 'rgb(13, 202, 240)',
+            backgroundColor: 'rgba(13, 202, 240, 0.1)',
+            tension: 0.4
+        }]
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

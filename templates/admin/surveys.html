@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-clipboard me-2"></i>Survey Management
+                    </h4>
+                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+                <p class="text-muted mb-0">Review and manage survey contributions</p>
+            </div>
+            <div class="card-body">
+                {% if surveys.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Text Sample</th>
+                                <th>Language</th>
+                                <th>User</th>
+                                <th>Confidence</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for survey in surveys.items %}
+                            <tr class="{% if not survey.is_approved %}table-warning{% endif %}">
+                                <td>
+                                    <div class="text-truncate" style="max-width: 300px;" title="{{ survey.text_sample }}">
+                                        {{ survey.text_sample }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        {% if survey.language == 'en' %}🇺🇸 EN
+                                        {% elif survey.language == 'es' %}🇪🇸 ES
+                                        {% elif survey.language == 'fr' %}🇫🇷 FR
+                                        {% elif survey.language == 'bg' %}🇧🇬 BG
+                                        {% elif survey.language == 'de' %}🇩🇪 DE
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ survey.user.get_full_name() }}</strong>
+                                        <br>
+                                        <small class="text-muted">@{{ survey.user.username }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ "%.0f"|format(survey.confidence * 100) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if survey.is_approved %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Approved
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock me-1"></i>Pending
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ survey.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#viewModal{{ survey.id }}">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if not survey.is_approved %}
+                                        <a href="{{ url_for('admin.approve_survey', survey_id=survey.id) }}" class="btn btn-outline-success">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                        {% else %}
+                                        <a href="{{ url_for('admin.reject_survey', survey_id=survey.id) }}" class="btn btn-outline-warning">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ survey.id }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if surveys.pages > 1 %}
+                <nav aria-label="Survey pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if surveys.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.surveys', page=surveys.prev_num) }}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in surveys.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != surveys.page %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('admin.surveys', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                                {% endif %}
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if surveys.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.surveys', page=surveys.next_num) }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Surveys Found</h5>
+                    <p class="text-muted">No survey contributions have been submitted yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Modals -->
+{% for survey in surveys.items %}
+<div class="modal fade" id="viewModal{{ survey.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-clipboard me-2"></i>Survey Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6>Text Sample</h6>
+                        <div class="p-3 bg-light rounded mb-3">
+                            {{ survey.text_sample }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h6>Detected Language</h6>
+                                <span class="badge bg-primary fs-6">
+                                    {% if survey.language == 'en' %}🇺🇸 English
+                                    {% elif survey.language == 'es' %}🇪🇸 Spanish
+                                    {% elif survey.language == 'fr' %}🇫🇷 French
+                                    {% elif survey.language == 'bg' %}🇧🇬 Bulgarian
+                                    {% elif survey.language == 'de' %}🇩🇪 German
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h6>User Confidence</h6>
+                                <span class="badge bg-info fs-6">
+                                    {{ "%.0f"|format(survey.confidence * 100) }}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6>Submission Info</h6>
+                        <p class="mb-1">
+                            <strong>User:</strong> {{ survey.user.get_full_name() }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Username:</strong> @{{ survey.user.username }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Date:</strong> {{ survey.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </p>
+                        <p class="mb-1">
+                            <strong>Status:</strong>
+                            {% if survey.is_approved %}
+                            <span class="badge bg-success">Approved</span>
+                            {% else %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-3">
+                            <strong>Text Length:</strong> {{ survey.text_sample|length }} chars
+                        </p>
+                        
+                        <div class="d-grid gap-2">
+                            {% if not survey.is_approved %}
+                            <a href="{{ url_for('admin.approve_survey', survey_id=survey.id) }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-check me-2"></i>Approve
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('admin.reject_survey', survey_id=survey.id) }}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-times me-2"></i>Reject
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modals -->
+<div class="modal fade" id="deleteModal{{ survey.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-trash me-2 text-danger"></i>Delete Survey
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone!
+                </div>
+                <p>Are you sure you want to delete this survey contribution?</p>
+                <div class="p-3 bg-light rounded">
+                    <strong>Text:</strong> {{ survey.text_sample[:100] }}{% if survey.text_sample|length > 100 %}...{% endif %}
+                </div>
+                <p class="mt-2 text-muted small">
+                    This will permanently remove the survey from the training dataset.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('admin.delete_survey', survey_id=survey.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Survey
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
