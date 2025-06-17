@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <!-- Hero Section -->
+        <div class="jumbotron bg-dark text-white p-5 rounded mb-4">
+            <div class="text-center">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-language me-3"></i>Language Detector
+                </h1>
+                <p class="lead mb-4">Instantly detect the language of any text using our pre-trained model.</p>
+                <a class="btn btn-light btn-lg" href="{{ url_for('main.predict') }}">
+                    <i class="fas fa-search me-2"></i>Start Detecting
+                </a>
+            </div>
+        </div>
+
+        <!-- Supported Languages -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-globe me-2"></i>Supported Languages
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center">
+                                <span class="fs-4 me-3">🇺🇸</span>
+                                <div>
+                                    <strong>English</strong>
+                                    <small class="d-block text-muted">Latin script</small>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <span class="fs-4 me-3">🇪🇸</span>
+                                <div>
+                                    <strong>Spanish</strong>
+                                    <small class="d-block text-muted">Latin script</small>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <span class="fs-4 me-3">🇫🇷</span>
+                                <div>
+                                    <strong>French</strong>
+                                    <small class="d-block text-muted">Latin script</small>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center">
+                                <span class="fs-4 me-3">🇧🇬</span>
+                                <div>
+                                    <strong>Bulgarian</strong>
+                                    <small class="d-block text-muted">Cyrillic script</small>
+                                </div>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <span class="fs-4 me-3">🇩🇪</span>
+                                <div>
+                                    <strong>German</strong>
+                                    <small class="d-block text-muted">Latin script</small>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,146 +1,64 @@
-from flask import render_template
+from flask import render_template, request, flash, redirect, url_for, current_app, jsonify
+from flask_login import login_required, current_user
+from datetime import datetime
+import time
+import logging
+import json
+
 from app.main import bp
+from app.models import User, Prediction, db
+from app.forms.forms import PredictionForm
+from app.core.perceptron import MultiClassPerceptron
+from app.core.utils import get_or_create_model
 
 @bp.route('/')
-@bp.route('/index')
 def index():
-    # Placeholder for application statistics
-    stats = {
-        'total_users': 123,  # Example data
-        'total_predictions': 4567, # Example data
-        'total_surveys': 789, # Example data
-        'model_accuracy': 0.92 # Example data
-    }
-    return render_template('index.html', title='Home', stats=stats)
+    """Home page"""
+    return render_template('index.html', title='Language Detector')
 
 @bp.route('/predict', methods=['GET', 'POST'])
 def predict():
     """Language prediction interface"""
-    from app.forms.forms import PredictionForm
-    from flask_login import current_user, login_required
-    from flask import flash, redirect, url_for, current_app
-    from app.models import Prediction
-    from app.extensions import db
-    from app.core.utils import get_or_create_model
-    import time
-    import logging
-
     form = PredictionForm()
-    prediction_result = None
-
+    
     if form.validate_on_submit():
         start_time = time.time()
-
-        try:
-            # Get or create the trained model
-            model = get_or_create_model()
-
-            if not model.is_trained:
-                flash('The model is not trained yet. Please contribute to surveys first.', 'warning')
-                return redirect(url_for('main.survey'))
-
-            # Make prediction
-            input_text = form.input_text.data
-            predicted_language = model.predict(input_text)
-            confidence_scores = model.predict_proba(input_text)
-
-            processing_time = time.time() - start_time
-
-            # Save prediction to database if user is logged in
-            if current_user.is_authenticated:
-                prediction = Prediction(
-                    user_id=current_user.id,
-                    input_text=input_text,
-                    predicted_language=predicted_language,
-                    processing_time=processing_time,
-                    is_public=form.make_public.data
-                )
-                prediction.set_confidence_scores(confidence_scores)
-
-                db.session.add(prediction)
-                db.session.commit()
-
-                prediction_id = prediction.id
-            else:
-                prediction_id = None
-
-            # Prepare result for display
-            prediction_result = {
-                'predicted_language': predicted_language,
-                'language_name': current_app.config['LANGUAGE_NAMES'][predicted_language],
-                'confidence_scores': confidence_scores,
-                'processing_time': processing_time,
-                'prediction_id': prediction_id
-            }
-
-            flash('Prediction completed successfully!', 'success')
-
-        except Exception as e:
-            logging.error(f"Prediction error: {e}")
-            flash('An error occurred during prediction. Please try again.', 'danger')
-
-    return render_template('predict.html', title='Language Prediction', 
-                         form=form, prediction_result=prediction_result)
-
-@bp.route('/survey', methods=['GET', 'POST'])
-def survey():
-    """Language survey interface for collecting training data"""
-    from app.forms.forms import SurveyForm
-    from flask_login import current_user
-    from flask import flash, redirect, url_for
-    from app.models import Survey
-    from app.extensions import db
-
-    form = SurveyForm()
-    user_surveys = []
-
-    # Get user's recent surveys if logged in
-    if current_user.is_authenticated:
-        user_surveys = Survey.query.filter_by(user_id=current_user.id)\
-                                  .order_by(Survey.created_at.desc())\
-                                  .limit(10).all()
-
-    if form.validate_on_submit():
-        if not current_user.is_authenticated:
-            flash('Please log in to submit survey data.', 'warning')
-            return redirect(url_for('auth.login'))
-
-        # Create new survey entry
-        survey = Survey(
-            user_id=current_user.id,
-            text_sample=form.text_sample.data,
-            language=form.language.data,
-            confidence=form.confidence.data
+        
+        # Get the pre-trained model
+        model = get_or_create_model()
+        
+        # Make prediction
+        prediction_result = model.predict(form.input_text.data)
+        processing_time = time.time() - start_time
+        
+        # Create prediction record
+        prediction = Prediction(
+            user_id=current_user.id if current_user.is_authenticated else None,
+            input_text=form.input_text.data,
+            predicted_language=prediction_result['language'],
+            confidence_scores=json.dumps(prediction_result['scores']),
+            processing_time=processing_time,
+            is_public=form.make_public.data if hasattr(form, 'make_public') else False
         )
-
-        db.session.add(survey)
+        
+        db.session.add(prediction)
         db.session.commit()
-
-        flash('Thank you for your contribution! Your survey has been submitted.', 'success')
-        return redirect(url_for('main.survey'))
-
-    return render_template('survey.html', title='Language Survey', 
-                         form=form, user_surveys=user_surveys)
+        
+        return render_template('predict.html', title='Language Detection',
+                             form=form, prediction_result=prediction)
+    
+    return render_template('predict.html', title='Language Detection', form=form)
 
 @bp.route('/results')
+@login_required
 def results():
-    """User's prediction results"""
-    from flask_login import current_user, login_required
-    from flask import request, current_app, redirect, url_for, flash
-    from app.models import Prediction
-    
-    if not current_user.is_authenticated:
-        flash('Please log in to view your results.', 'warning')
-        return redirect(url_for('auth.login'))
-    
+    """User's prediction history"""
     page = request.args.get('page', 1, type=int)
-    per_page = getattr(current_app.config, 'RESULTS_PER_PAGE', 10)
-    
     predictions = Prediction.query.filter_by(user_id=current_user.id)\
-                                 .order_by(Prediction.created_at.desc())\
-                                 .paginate(page=page, per_page=per_page, error_out=False)
+                                .order_by(Prediction.created_at.desc())\
+                                .paginate(page=page, per_page=10, error_out=False)
     
-    return render_template('results.html', title='My Results', 
+    return render_template('results.html', title='My Results',
                          predictions=predictions, public_view=False)
 
 @bp.route('/model_info')

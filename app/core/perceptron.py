@@ -86,18 +86,20 @@ class MultiClassPerceptron:
         
         return probabilities
     
-    def predict(self, text: str) -> str:
+    def predict(self, text: str) -> dict:
         """
-        Predict the most likely language
-        
+        Predict the most likely language and return a dictionary with language and scores.
         Args:
             text: Input text to classify
-            
         Returns:
-            Predicted language code
+            Dictionary with 'language' and 'scores' keys
         """
         probabilities = self.predict_proba(text)
-        return max(probabilities, key=probabilities.get)
+        predicted_language = max(probabilities, key=probabilities.get)
+        return {
+            'language': predicted_language,
+            'scores': probabilities
+        }
     
     def _calculate_loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """Calculate cross-entropy loss"""

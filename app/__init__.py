@@ -2,28 +2,29 @@ import os
 import logging
 from flask import Flask, render_template
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_login import LoginManager
+from flask_mail import Mail
+from flask_migrate import Migrate
+from flask_bootstrap import Bootstrap
+from config import Config
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
 # Import extensions from separate module to avoid circular imports
-from app.extensions import db, login_manager, mail, migrate, bootstrap, csrf
+from app.extensions import db, csrf, login_manager, mail, migrate, bootstrap
 
-def create_app():
+def create_app(config_class=Config):
     """Application factory pattern"""
-    # Determine the root directory of the application
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.abspath(os.path.join(current_dir, os.pardir))
-
-    # Initialize Flask app, explicitly setting template_folder and static_folder
+    # Initialize Flask app with correct template and static folders
     flask_instance = Flask(
         __name__,
-        template_folder=os.path.join(project_root, 'templates'),
-        static_folder=os.path.join(project_root, 'static')
+        template_folder='templates',
+        static_folder='static'
     )
     
     # Configuration
-    flask_instance.config.from_object('app.config.Config')
+    flask_instance.config.from_object(config_class)
     flask_instance.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
     flask_instance.wsgi_app = ProxyFix(flask_instance.wsgi_app, x_proto=1, x_host=1)
     
@@ -74,7 +75,6 @@ def create_app():
         import app.models
         db.create_all()
     
-    print(f"DEBUG: Inside create_app, returning type: {type(flask_instance)}")
     return flask_instance
 
 # App instance will be created in main.py

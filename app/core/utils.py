@@ -4,29 +4,23 @@ from app.models import Survey, ModelTraining
 from app.extensions import db
 from app.core.perceptron import MultiClassPerceptron
 from flask import current_app
+import os
+import pickle
 
 # Global model instance
 _model_instance = None
 
-def get_or_create_model() -> MultiClassPerceptron:
-    """Get or create the global model instance"""
-    global _model_instance
+def get_or_create_model():
+    """Get the pre-trained model"""
+    model_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'model.pkl')
     
-    if _model_instance is None:
-        _model_instance = MultiClassPerceptron(
-            languages=current_app.config['LANGUAGES'],
-            learning_rate=0.01,
-            max_epochs=1000,
-            tolerance=1e-6
-        )
-        
-        # Try to train with existing data
-        try:
-            train_model_with_surveys(model=_model_instance)
-        except Exception as e:
-            logging.warning(f"Could not train model on startup: {e}")
+    if os.path.exists(model_path):
+        with open(model_path, 'rb') as f:
+            model = pickle.load(f)
+    else:
+        raise FileNotFoundError("Pre-trained model not found. Please ensure the model file exists at: " + model_path)
     
-    return _model_instance
+    return model
 
 def train_model_with_surveys(model: Optional[MultiClassPerceptron] = None) -> Optional[Dict[str, Any]]:
     """Train the model with approved survey data"""

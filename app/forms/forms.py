@@ -1,4 +1,3 @@
-
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, BooleanField, SubmitField, FloatField, PasswordField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, ValidationError
@@ -56,11 +55,10 @@ class SurveyForm(FlaskForm):
 
 class PredictionForm(FlaskForm):
     """Form for language prediction"""
-    input_text = TextAreaField('Text to Analyze', 
+    input_text = TextAreaField('Text', 
                               validators=[DataRequired(), Length(min=1, max=5000)],
-                              render_kw={'placeholder': 'Enter text for language detection...',
-                                       'rows': 6})
-    make_public = BooleanField('Make this prediction public', default=False)
+                              render_kw={'placeholder': 'Enter or paste text to detect its language...',
+                                       'rows': 5})
     submit = SubmitField('Detect Language')
 
 class EditProfileForm(FlaskForm):

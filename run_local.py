@@ -22,7 +22,6 @@ def main():
     try:
         from app import create_app
         flask_app = create_app()
-        flask_app.config['SERVER_NAME'] = None
         
         print("Starting Flask development server...")
         print("Open your browser to: http://localhost:5000")
@@ -41,7 +40,7 @@ def main():
         print("\nPlease ensure all required packages are installed.")
         print("Check that the app module is properly structured.")
         print("\nRequired packages:")
-        print("flask fla flask-login flask-wtf flask-mail flask-migrate flask-bootstrap wtforms werkzeug itsdangerous email-validator numpy python-dotenv")
+        print("flask flask-login flask-wtf flask-mail flask-migrate flask-bootstrap wtforms werkzeug itsdangerous email-validator numpy python-dotenv")
         sys.exit(1)
     except Exception:
         import traceback

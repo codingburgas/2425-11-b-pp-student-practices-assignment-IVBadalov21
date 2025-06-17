@@ -187,7 +187,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <h6>Input Text</h6>
-                        <div class="p-3 bg-light rounded mb-3">
+                        <div class="p-3 bg-light text-dark rounded mb-3">
                             {{ prediction.input_text }}
                         </div>
                         
@@ -299,6 +299,7 @@
                 
                 <div class="d-grid gap-2">
                     <form method="POST" action="{{ url_for('main.prediction_feedback') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="prediction_id" value="{{ prediction.id }}">
                         <input type="hidden" name="actual_language" value="{{ prediction.predicted_language }}">
                         <button type="submit" class="btn btn-success w-100">
@@ -314,6 +315,7 @@
                     {% for lang_code, lang_name in config.LANGUAGE_NAMES.items() %}
                     {% if lang_code != prediction.predicted_language %}
                     <form method="POST" action="{{ url_for('main.prediction_feedback') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="prediction_id" value="{{ prediction.id }}">
                         <input type="hidden" name="actual_language" value="{{ lang_code }}">
                         <button type="submit" class="btn btn-outline-warning btn-sm w-100">
